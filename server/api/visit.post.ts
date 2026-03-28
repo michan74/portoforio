@@ -32,23 +32,6 @@ export default defineEventHandler(async () => {
   await storage.setItem('visitCount', newCount)
   await storage.setItem('cookies', updatedCookies)
 
-  // 訪問時にサーバー側で画像を事前取得してキャッシュ（クライアントの 429 を防ぐ）
-  try {
-    const imgRes = await fetch(imageUrl)
-    if (imgRes.ok) {
-      const buffer = await imgRes.arrayBuffer()
-      const contentType = imgRes.headers.get('content-type') || 'image/jpeg'
-      const bytes = new Uint8Array(buffer)
-      let binary = ''
-      bytes.forEach(b => (binary += String.fromCharCode(b)))
-      const base64 = btoa(binary)
-      await useStorage('images').setItem(String(seed), { data: base64, contentType })
-    }
-  }
-  catch {
-    // キャッシュ失敗は無視（/api/image でリトライされる）
-  }
-
   return {
     visitCount: newCount,
     cookies: updatedCookies,
