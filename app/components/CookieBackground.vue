@@ -1,10 +1,6 @@
 <script setup lang="ts">
-interface CookieEntry {
-  id: number
-  seed: number
-  shape: string
-  imageUrl: string
-}
+const COOKIE_IMAGES = ['/cookies/cookies_10.png']
+const MAX_COOKIES = 50
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 let cleanupFn: (() => void) | null = null
@@ -12,37 +8,30 @@ let cleanupFn: (() => void) | null = null
 // ロード成功した URL を管理
 const loadedImages = new Set<string>()
 
-// 画像を事前ロード（成功したものだけ Set に登録）
+// 画像を事前ロード
 const preloadImage = (url: string): Promise<void> =>
   new Promise((resolve) => {
     const img = new Image()
-    img.crossOrigin = 'anonymous'
     img.onload = () => {
       loadedImages.add(url)
       resolve()
     }
-    img.onerror = () => resolve() // 失敗してもブロックしない
+    img.onerror = () => resolve()
     img.src = url
   })
 
 onMounted(async () => {
   if (!canvasRef.value) return
 
-  // 訪問を記録 & 全クッキー取得
+  // 訪問を記録 & カウント取得
   const res = await fetch('/api/visit', { method: 'POST' })
-  const { cookies } = await res.json() as { cookies: CookieEntry[]; visitCount: number }
+  const { visitCount } = await res.json() as { visitCount: number }
 
-  // 表示するのは最新50件まで（パフォーマンス考慮）
-  const displayCookies = cookies.slice(-50)
+  // 降らせるクッキー数（最大50個）
+  const cookieCount = Math.min(visitCount, MAX_COOKIES)
 
-  // Pollinations.ai への直リクエストは403になるため自サーバー経由でプロキシ
-  const proxyUrl = (url: string) => `/api/image?url=${encodeURIComponent(url)}`
-
-  // 画像を並列プリロード（最大15秒でタイムアウト）
-  await Promise.race([
-    Promise.all(displayCookies.map((c: CookieEntry) => preloadImage(proxyUrl(c.imageUrl)))),
-    new Promise(resolve => setTimeout(resolve, 15000)),
-  ])
+  // 画像を事前ロード
+  await Promise.all(COOKIE_IMAGES.map(preloadImage))
 
   const Matter = await import('matter-js')
   const { Engine, Render, Runner, Bodies, Composite } = Matter
@@ -78,9 +67,10 @@ onMounted(async () => {
   const RADIUS = 26
   const FALLBACK_COLORS = ['#C8956C', '#D4A574', '#B8855C', '#E0B48A', '#C07050']
 
-  displayCookies.forEach((cookie: CookieEntry, index: number) => {
+  for (let i = 0; i < cookieCount; i++) {
     setTimeout(() => {
       const x = Math.random() * (W - 80) + 40
+      const imageUrl = COOKIE_IMAGES[Math.floor(Math.random() * COOKIE_IMAGES.length)]
       const scale = (RADIUS * 2) / 256
 
       const body = Bodies.circle(x, -RADIUS - 10, RADIUS, {
@@ -88,24 +78,23 @@ onMounted(async () => {
         friction: 0.5,
         frictionAir: 0.008,
         angle: Math.random() * Math.PI * 2,
-        render: loadedImages.has(proxyUrl(cookie.imageUrl))
+        render: loadedImages.has(imageUrl)
           ? {
               sprite: {
-                texture: proxyUrl(cookie.imageUrl),
+                texture: imageUrl,
                 xScale: scale,
                 yScale: scale,
               },
             }
           : {
-              // 画像ロード失敗時はカラーで代替
-              fillStyle: FALLBACK_COLORS[index % FALLBACK_COLORS.length],
+              fillStyle: FALLBACK_COLORS[i % FALLBACK_COLORS.length],
               strokeStyle: '#7A4A2A',
               lineWidth: 1.5,
             },
       })
       Composite.add(engine.world, body)
-    }, index * 300) // 300ms間隔で順番に落とす
-  })
+    }, i * 300)
+  }
 
   cleanupFn = () => {
     Render.stop(render)

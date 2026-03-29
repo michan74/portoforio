@@ -92,3 +92,40 @@ Amplifyコンソールでぽちぽちっとするだけ！
 リポジトリにpushするごとにデプロイが走るようになります〜
 
 ## Amplify Gen 2
+
+### 用意するもの
+
+- AWSユーザーのアクセスキー
+  - 開発用
+    - AmplifyBackendDeployFullAccess
+    - AmazonS3FullAccess
+    - CloudFormationFullAccess
+  - サービス実行用
+    -
+
+### やること
+
+- 1. Amplify初期化
+  ```
+  npm amplify create
+  ```
+
+- 2. source定義の追加
+  ```
+  import { defineStorage } from '@aws-amplify/backend';
+  
+  export const storage = defineStorage({
+    name: 'cookieImages',
+    access: (allow) => ({
+      // クッキー画像は誰でも読み取り可能
+      'cookies/*': [allow.guest.to(['read'])],
+    }),
+  });
+  ```
+
+- 3. CDK環境のbootstrap(必要なら)
+  - [Troubleshoot CDKToolkit stack issues - Swift - AWS Amplify Gen 2 Documentation](https://docs.amplify.aws/swift/build-a-backend/troubleshooting/cdktoolkit-stack/?utm_source=chatgpt.com#error-bootstrapping-account)
+  - CDKでデプロイするための準備
+    - AWS側に必要なリソースが作成される
+      - CloudFormation、S3などなど
+    - 1アカウント✖️1リージョンで1回実行すればOK

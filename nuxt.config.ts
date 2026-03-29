@@ -8,6 +8,12 @@ export default defineNuxtConfig({
     port: 3000,
   },
 
+  runtimeConfig: {
+    // サーバーサイドのみ（秘匿）
+    appsyncUrl: process.env.APPSYNC_URL || '',
+    appsyncApiKey: process.env.APPSYNC_API_KEY || '',
+  },
+
   vite: {
     server: {
       watch: {

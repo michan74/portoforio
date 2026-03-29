@@ -22,3 +22,10 @@ logs
 .env
 .env.*
 !.env.example
+
+.aws/*
+
+# amplify
+.amplify
+amplify_outputs*
+amplifyconfiguration*

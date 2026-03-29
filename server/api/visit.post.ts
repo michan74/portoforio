@@ -1,39 +1,61 @@
-interface CookieEntry {
-  id: number
-  seed: number
-  shape: string
-  imageUrl: string
+const VISITOR_COUNT_ID = 'main'
+
+async function graphqlRequest(url: string, apiKey: string, query: string, variables: Record<string, unknown> = {}) {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+    },
+    body: JSON.stringify({ query, variables }),
+  })
+  return response.json()
 }
 
-const SHAPES = [
-  'star', 'heart', 'flower', 'butterfly', 'moon',
-  'cat', 'leaf', 'bear', 'rabbit', 'mushroom',
-  'snowflake', 'crown', 'fish', 'apple', 'bird',
-]
-
 export default defineEventHandler(async () => {
-  const storage = useStorage('data')
+  const config = useRuntimeConfig()
+  const { appsyncUrl, appsyncApiKey } = config
 
-  const visitCount = (await storage.getItem<number>('visitCount')) ?? 0
-  const cookies = (await storage.getItem<CookieEntry[]>('cookies')) ?? []
+  if (!appsyncUrl || !appsyncApiKey) {
+    throw createError({ statusCode: 500, statusMessage: 'AppSync configuration missing' })
+  }
 
-  const newCount = visitCount + 1
-  const shape = SHAPES[visitCount % SHAPES.length] ?? 'star'
-  const seed = newCount * 13 + 7
+  // 訪問者カウントを取得
+  const getResult = await graphqlRequest(appsyncUrl, appsyncApiKey, `
+    query GetVisitorCount($id: ID!) {
+      getVisitorCount(id: $id) {
+        id
+        count
+      }
+    }
+  `, { id: VISITOR_COUNT_ID })
 
-  const prompt = encodeURIComponent(
-    `cute ${shape} shaped cookie, top view, bakery style, isolated on white background, no shadow`,
-  )
-  const imageUrl = `https://image.pollinations.ai/prompt/${prompt}?width=256&height=256&seed=${seed}&nologo=true`
+  const currentCount = getResult.data?.getVisitorCount?.count ?? 0
+  const newCount = currentCount + 1
 
-  const newCookie: CookieEntry = { id: newCount, seed, shape, imageUrl }
-
-  const updatedCookies = [...cookies, newCookie].slice(-100)
-  await storage.setItem('visitCount', newCount)
-  await storage.setItem('cookies', updatedCookies)
+  if (currentCount === 0) {
+    // 初回：作成
+    await graphqlRequest(appsyncUrl, appsyncApiKey, `
+      mutation CreateVisitorCount($input: CreateVisitorCountInput!) {
+        createVisitorCount(input: $input) {
+          id
+          count
+        }
+      }
+    `, { input: { id: VISITOR_COUNT_ID, count: newCount } })
+  } else {
+    // 更新
+    await graphqlRequest(appsyncUrl, appsyncApiKey, `
+      mutation UpdateVisitorCount($input: UpdateVisitorCountInput!) {
+        updateVisitorCount(input: $input) {
+          id
+          count
+        }
+      }
+    `, { input: { id: VISITOR_COUNT_ID, count: newCount } })
+  }
 
   return {
     visitCount: newCount,
-    cookies: updatedCookies,
   }
 })
