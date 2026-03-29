@@ -87,11 +87,16 @@ Amplifyを使ってみることにしました。
 
 ### やること
 
+- 1. Amplifyコンソールでアプリ作成
 Amplifyコンソールでぽちぽちっとするだけ！
+
 
 リポジトリにpushするごとにデプロイが走るようになります〜
 
 ## Amplify Gen 2
+
+Amplify Hosting -> Amplify Gen 2 に直接移行するのはできなかったので、Amiplify側でアプリの作り直しは必要になりました。
+アプリを作成時にリポジトリ内の `/amplify` フォルダを検出して、Gen 2 としてアプリ作成されます。
 
 ### 用意するもの
 
@@ -101,7 +106,7 @@ Amplifyコンソールでぽちぽちっとするだけ！
     - AmazonS3FullAccess
     - CloudFormationFullAccess
   - サービス実行用
-    -
+    - 
 
 ### やること
 
@@ -109,6 +114,7 @@ Amplifyコンソールでぽちぽちっとするだけ！
   ```
   npm amplify create
   ```
+  ルートに`/amplify`フォルダが作成されます。
 
 - 2. source定義の追加
   ```
@@ -129,3 +135,5 @@ Amplifyコンソールでぽちぽちっとするだけ！
     - AWS側に必要なリソースが作成される
       - CloudFormation、S3などなど
     - 1アカウント✖️1リージョンで1回実行すればOK
+
+- 4. Amplifyコンソールでアプリ作成
