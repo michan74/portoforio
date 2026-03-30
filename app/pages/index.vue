@@ -1,139 +1,91 @@
 <script setup lang="ts">
-import yaml from 'js-yaml'
-import profileYaml from '~/content/profile.yaml?raw'
-import worksYaml from '~/content/works.yaml?raw'
-
-interface ProfileItem {
-  year: string
-  text: string
-}
-
-interface WorkItem {
-  name: string
-  url: string
-  description: string
-}
-
-const profile = yaml.load(profileYaml) as ProfileItem[]
-const works = yaml.load(worksYaml) as WorkItem[]
+const isWorksOpen = ref(false)
 </script>
 
 <template>
-  <div class="container">
-    <header class="header">
-      <h1>Portfolio</h1>
-    </header>
-
-    <section class="section">
-      <h2>Profile</h2>
-      <ul class="timeline">
-        <li v-for="item in profile" :key="item.year" class="timeline-item">
-          <span class="year">{{ item.year }}</span>
-          <span class="text">{{ item.text }}</span>
-        </li>
-      </ul>
-    </section>
-
-    <section class="section">
-      <h2>Works</h2>
-      <ul class="works">
-        <li v-for="work in works" :key="work.name" class="work-item">
-          <a :href="work.url" target="_blank" rel="noopener">
-            {{ work.name }}
-          </a>
-          <span class="description">{{ work.description }}</span>
-        </li>
-      </ul>
-    </section>
+  <div class="page">
+    <div class="profile">
+      <img src="/kuma.JPG" alt="icon" class="icon" />
+      <div class="info">
+        <h1 class="name">dorayaki</h1>
+        <ul class="details">
+          <li>webエンジニア(2021.10~)</li>
+          <li>くまになりたい。</li>
+        </ul>
+        <ul class="details">
+            <li><a href="https://x.com/SPuemi"><img src="/x_logo.png"></a></li>
+            <li><a href="https://zenn.dev/michan74"><img src="/zenn_logo.png"></a></li>
+        </ul>
+        <p class="works" @click="isWorksOpen = true">works</p>
+      </div>
+    </div>
   </div>
+
+  <WorksModal :is-open="isWorksOpen" @close="isWorksOpen = false" />
 </template>
 
 <style scoped>
-.container {
+.page {
   position: relative;
   z-index: 1;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.profile {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.icon {
+  width: 150px;
+  height: auto;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.name {
+  font-size: 1.5rem;
+  font-weight: normal;
+  margin: 0;
   color: #333;
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 3rem;
-}
-
-.header h1 {
-  font-size: 2.5rem;
-  color: #5a3d2b;
-}
-
-.section {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 12px;
-  padding: 1.5rem 2rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.section h2 {
-  font-size: 1.5rem;
-  color: #7a4a2a;
-  margin-bottom: 1rem;
-  border-bottom: 2px solid #d4a574;
-  padding-bottom: 0.5rem;
-}
-
-.timeline {
+.details {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
-.timeline-item {
-  display: flex;
-  gap: 1rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #eee;
+.details li {
+  font-size: 1rem;
+  color: #333;
+  line-height: 1.6;
 }
 
-.timeline-item:last-child {
-  border-bottom: none;
-}
-
-.year {
-  font-weight: bold;
-  color: #7a4a2a;
-  min-width: 80px;
+.details li img {
+  height: 1.5rem;
+  width: auto;
 }
 
 .works {
-  list-style: none;
-  padding: 0;
+  margin-top: 1rem;
+  font-size: 1rem;
+  color: #333;
+  cursor: pointer;
+  transition: opacity 0.2s;
 }
 
-.work-item {
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #eee;
-}
-
-.work-item:last-child {
-  border-bottom: none;
-}
-
-.work-item a {
-  color: #5a3d2b;
-  font-weight: bold;
-  text-decoration: none;
-}
-
-.work-item a:hover {
-  text-decoration: underline;
-}
-
-.description {
-  display: block;
-  font-size: 0.9rem;
-  color: #666;
-  margin-top: 0.25rem;
+.works:hover {
+  opacity: 0.7;
 }
 </style>
