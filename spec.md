@@ -60,20 +60,50 @@ flowchart TB
 
 ## 内容
 
+### icon
+
+- kuma.png
+
 ### profile
-- 2019.3  4年生大学法学部卒業
-- 2019.4  医療関連パッケージの運用保守
-- 2021.10 国内向け漫画配信サイト
-- 2023.1  国内向け音声配信サイト
-- 2024.2  海外向け漫画配信サイト
-- 2025.3  海外向け動画配信サイト
+- dorayaki
+- webエンジニア(2021.10~)
+- くまになりたい
+
+- twitter: https://x.com/SPuemi
+- zenn: https://zenn.dev/michan74
 
 ### works
-- [豆腐](https://github.com/michan74/Tofu?tab=readme-ov-file)
-- [雲雀文庫](https://github.com/michan74/hibari-library?tab=readme-ov-file)
-- 第１回zennハッカソン [ハッシュタグ工房](https://github.com/michan74/koduck)
-- 第２回zennハッカソン [Bear Horizon]()
-- 第４回zennハッカソン [食事キロクマ]()
+- Tofu
+  - とうふ✖️じゃんけんゲーム
+  - 非公開
+  - /works/tofu.png
+
+- 雲雀文庫
+  - 色で本を共有する
+  - [雲雀文庫](https://github.com/michan74/hibari-library?tab=readme-ov-file)
+  - no image 
+
+- ハッシュタグ工房
+  - SNSに投稿する画像からハッシュタグを生成
+  - [第１回zennハッカソン 提出作品](https://zenn.dev/michan74/articles/b442ee4115c7e5)
+  - hashtag.png
+
+- Bear Horizon
+  - くまの気持ちで英単語を学ぶ
+  - [第２回zennハッカソン 提出作品](https://zenn.dev/michan74/articles/36ef1b41d64590)
+  - bear_horizon.png
+
+- 食事キロクマ
+  - くまを育てて食事を記録する
+  - [第４回zennハッカソン 提出作品](https://zenn.dev/michan74/articles/65a0ecc47c9d7f)
+  - kirokuma.png
+
+## デザイン
+
+- icon profile　中央
+
+
+
 
 ## 機能
 
