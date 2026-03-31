@@ -1,19 +1,24 @@
-- name: 豆腐
-  url: https://github.com/michan74/Tofu
-  description: Tofu
+- name: Tofu
+  description: とうふ✖️じゃんけんゲーム
+  url: null
+  image: /works/tofu.png
 
 - name: 雲雀文庫
-  url: https://github.com/michan74/hibari-library
-  description: Hibari Library
+  description: 色で本を共有する
+  url: https://github.com/michan74/hibari-library?tab=readme-ov-file
+  image: null
 
 - name: ハッシュタグ工房
-  url: https://github.com/michan74/koduck
-  description: 第1回zennハッカソン
+  description: SNSに投稿する画像からハッシュタグを生成 (第1回zennハッカソン提出作品)
+  url: https://zenn.dev/michan74/articles/b442ee4115c7e5
+  image: /works/hashtag.png
 
 - name: Bear Horizon
-  url: "#"
-  description: 第2回zennハッカソン
+  description: くまの気持ちで英単語を学ぶ (第2回zennハッカソン提出作品)
+  url: https://zenn.dev/michan74/articles/36ef1b41d64590
+  image: /works/bear_horizon.png
 
 - name: 食事キロクマ
-  url: "#"
-  description: 第4回zennハッカソン
+  description: くまを育てて食事を記録する (第4回zennハッカソン提出作品)
+  url: https://zenn.dev/michan74/articles/65a0ecc47c9d7f
+  image: /works/kirokuma.png

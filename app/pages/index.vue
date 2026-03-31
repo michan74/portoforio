@@ -12,11 +12,11 @@ const isWorksOpen = ref(false)
           <li>webエンジニア(2021.10~)</li>
           <li>くまになりたい。</li>
         </ul>
-        <ul class="details">
+        <ul class="social-links">
             <li><a href="https://x.com/SPuemi"><img src="/x_logo.png"></a></li>
             <li><a href="https://zenn.dev/michan74"><img src="/zenn_logo.png"></a></li>
         </ul>
-        <p class="works" @click="isWorksOpen = true">works</p>
+        <button class="works-btn" @click="isWorksOpen = true">works→</button>
       </div>
     </div>
   </div>
@@ -44,7 +44,9 @@ const isWorksOpen = ref(false)
 
 .icon {
   width: 150px;
-  height: auto;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .info {
@@ -72,20 +74,45 @@ const isWorksOpen = ref(false)
   line-height: 1.6;
 }
 
-.details li img {
-  height: 1.5rem;
+.social-links {
+  list-style: none;
+  padding: 0;
+  margin: 1.0rem 0 0 0;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.social-links li img {
+  height: 1.2rem;
   width: auto;
 }
 
-.works {
+.works-btn {
   margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
   font-size: 1rem;
   color: #333;
+  background: transparent;
+  border: 1px solid #333;
+  border-radius: 4px;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: all 0.2s;
 }
 
-.works:hover {
-  opacity: 0.7;
+.works-btn:hover {
+  background: #333;
+  color: #fff;
+}
+
+@media (max-width: 600px) {
+  .profile {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .social-links {
+    justify-content: center;
+  }
 }
 </style>
