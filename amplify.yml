@@ -16,6 +16,8 @@ frontend:
         - npm install
     build:
       commands:
+        - export APPSYNC_URL=$(node -e "console.log(require('./amplify_outputs.json').data.url)")
+        - export APPSYNC_API_KEY=$(node -e "console.log(require('./amplify_outputs.json').data.api_key)")
         - npm run build
   artifacts:
     baseDirectory: .output/public
