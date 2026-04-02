@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const COOKIE_IMAGES = ['/cookies/cookies_10.png']
 const MAX_COOKIES = 50
+const VISITOR_COUNT_ID = 'visitor-count'
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 let cleanupFn: (() => void) | null = null
@@ -23,11 +24,22 @@ const preloadImage = (url: string): Promise<void> =>
 onMounted(async () => {
   if (!canvasRef.value) return
 
-  // 訪問を記録 & カウント取得
-  const res = await fetch('/api/visit', { method: 'POST' })
-  const { visitCount } = await res.json() as { visitCount: number }
+  // Amplify Clientで訪問を記録 & カウント取得
+  const client = useAmplifyClient()
 
-  // 降らせるクッキー数（最大50個）
+  const { data: existing } = await client.models.VisitorCount.get({ id: VISITOR_COUNT_ID })
+  const currentCount = existing?.count ?? 0
+  const newCount = currentCount + 1
+
+  if (currentCount === 0) {
+    await client.models.VisitorCount.create({ id: VISITOR_COUNT_ID, count: newCount })
+  } else {
+    await client.models.VisitorCount.update({ id: VISITOR_COUNT_ID, count: newCount })
+  }
+
+  const visitCount = newCount
+
+  // 降らせるクッキー数
   const cookieCount = Math.min(visitCount, MAX_COOKIES)
 
   // 画像を事前ロード

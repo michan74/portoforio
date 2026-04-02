@@ -98,44 +98,87 @@ Amplifyコンソールでぽちぽちっとするだけ！
 Amplify Hosting -> Amplify Gen 2 に直接移行するのはできなかったので、Amiplify側でアプリの作り直しは必要になりました。
 アプリを作成時にリポジトリ内の `/amplify` フォルダを検出して、Gen 2 としてアプリ作成されます。
 
-### 用意するもの
+### 前提
 
-- AWSユーザーのアクセスキー
-  - 開発用
+- 開発用AWSユーザーのアクセスキー
+  - 以下ポリシーが付与されていればOKでした
     - AmplifyBackendDeployFullAccess
     - AmazonS3FullAccess
     - CloudFormationFullAccess
-  - サービス実行用
-    - 
 
 ### やること
 
-- 1. Amplify初期化
+1. Amplify初期化
   ```
   npm amplify create
   ```
   ルートに`/amplify`フォルダが作成されます。
 
-- 2. source定義の追加
-  ```
-  import { defineStorage } from '@aws-amplify/backend';
+2. source定義の追加(DBの作成準備)
+  TypeScriptでDBのスキーマや認証方法を定義します。(CDKでインフラ定義するようなイメージ)
+  ```ts:souce.ts
+  import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
+
+  const schema = a.schema({
+    // 訪問者カウント（シングルトン的に使用）
+    VisitorCount: a
+      .model({
+        count: a.integer().required(),
+      })
+      .authorization((allow) => [allow.publicApiKey()]),
+  });
   
-  export const storage = defineStorage({
-    name: 'cookieImages',
-    access: (allow) => ({
-      // クッキー画像は誰でも読み取り可能
-      'cookies/*': [allow.guest.to(['read'])],
-    }),
+  export type Schema = ClientSchema<typeof schema>;
+  
+  export const data = defineData({
+    schema,
+    authorizationModes: {
+      defaultAuthorizationMode: 'apiKey',
+      apiKeyAuthorizationMode: {
+        expiresInDays: 365,
+      },
+    },
   });
   ```
 
-- 3. amplify.ymlを作成
+3. amplify.ymlを作成
 
-- 3. CDK環境のbootstrap(必要なら)
+4. CDK環境のbootstrap(必要なら)
   - [Troubleshoot CDKToolkit stack issues - Swift - AWS Amplify Gen 2 Documentation](https://docs.amplify.aws/swift/build-a-backend/troubleshooting/cdktoolkit-stack/?utm_source=chatgpt.com#error-bootstrapping-account)
   - CDKでデプロイするための準備
     - AWS側に必要なリソースが作成される
       - CloudFormation、S3などなど
-    - 1アカウント✖️1リージョンで1回実行すればOK
+    - 1アカウント内の1リージョンで1回実行すればOK。既に他プロジェクトなどで実行済みの場合は不要な作業。
 
-- 4. Amplifyコンソールでアプリ作成
+5. Amplifyコンソールでアプリ作成
+  Amplify Hostingと同じ流れでAWSコンソール上でぽちぽちします。
+
+## ポイント
+### DB定義をするだけでAppSync GraphQL APIも作成してくれる
+
+初めはバックエンドAPIを自分で実装して、そこからDB接続するように実装していたのですが、自分でバックエンドAPIを実装する必要がありませんでした！
+resource.tsにDB定義するだけで、すぐにフロントエンドから使える状態になっているのはとても便利でした。
+```md:イメージ図
+[resource.ts]
+    ↓
+Amplify Gen2
+    ↓
+┌──────────────────┐
+│ AppSync API      │ ← ★これも作成してくれる
+│  - query         │
+│  - mutation      │
+│  - resolver      │
+└──────────────────┘
+      ↓
+┌──────────────────┐
+│ DynamoDB         │ ← DB
+└──────────────────┘
+```
+
+### 認証情報の管理も任せられる
+
+
+
+## まとめ
+
+-
