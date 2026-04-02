@@ -16,13 +16,12 @@ frontend:
         - npm install
     build:
       commands:
-        - export APPSYNC_URL=$(node -e "console.log(require('./amplify_outputs.json').data.url)")
-        - export APPSYNC_API_KEY=$(node -e "console.log(require('./amplify_outputs.json').data.api_key)")
+        - npx ampx generate outputs --app-id $AWS_APP_ID --branch $AWS_BRANCH --out-dir . ## amplify_outputs.jsonの取得
         - npm run build
   artifacts:
     baseDirectory: .output/public
     files:
-      - '**/*'
+      - "**/*"
   cache:
     paths:
       - node_modules/**/*
