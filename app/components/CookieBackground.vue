@@ -27,17 +27,44 @@ onMounted(async () => {
   // Amplify Clientで訪問を記録 & カウント取得
   const client = useAmplifyClient()
 
-  const { data: existing } = await client.models.VisitorCount.get({ id: VISITOR_COUNT_ID })
-  const currentCount = existing?.count ?? 0
-  const newCount = currentCount + 1
+  // --- 1日1回制限（localStorage による重複排除）---
+  const STORAGE_KEY = 'visitor_counted_date'
+  const todayStr = new Date().toISOString().slice(0, 10) // UTC "YYYY-MM-DD"
 
-  if (currentCount === 0) {
-    await client.models.VisitorCount.create({ id: VISITOR_COUNT_ID, count: newCount })
-  } else {
-    await client.models.VisitorCount.update({ id: VISITOR_COUNT_ID, count: newCount })
+  let alreadyCounted = false
+  try {
+    alreadyCounted = localStorage.getItem(STORAGE_KEY) === todayStr
+  } catch {
+    // localStorage がブロックされている場合は未カウント扱いにして従来通り動作
   }
 
-  const visitCount = newCount
+  // カウントは常に取得（クッキーアニメーション用）
+  const { data: existing } = await client.models.VisitorCount.get({ id: VISITOR_COUNT_ID })
+  const currentCount = existing?.count ?? 0
+
+  let visitCount: number
+
+  if (alreadyCounted) {
+    // 本日分はカウント済み → 読み取りのみ
+    visitCount = currentCount
+  } else {
+    // 初回訪問 → インクリメントして localStorage に記録
+    const newCount = currentCount + 1
+
+    if (currentCount === 0) {
+      await client.models.VisitorCount.create({ id: VISITOR_COUNT_ID, count: newCount })
+    } else {
+      await client.models.VisitorCount.update({ id: VISITOR_COUNT_ID, count: newCount })
+    }
+
+    try {
+      localStorage.setItem(STORAGE_KEY, todayStr)
+    } catch {
+      // 書き込み失敗してもサーバー側はカウント済みなのでベストエフォート
+    }
+
+    visitCount = newCount
+  }
 
   // 降らせるクッキー数
   const cookieCount = Math.min(visitCount, MAX_COOKIES)
