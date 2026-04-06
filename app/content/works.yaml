@@ -22,3 +22,8 @@
   description: くまを育てて食事を記録する (第4回zennハッカソン提出作品)
   url: https://zenn.dev/michan74/articles/65a0ecc47c9d7f
   image: /works/kirokuma.png
+
+- name: クッキー型3Dモデルメーカー
+  description: オリジナルクッキー型の3DモデルをPythonで生成
+  url: https://zenn.dev/wwwave/articles/3f91552a7673eb
+  image: /works/cookie.png
