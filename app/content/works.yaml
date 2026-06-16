@@ -8,6 +8,11 @@
   url: https://github.com/michan74/hibari-library?tab=readme-ov-file
   image: null
 
+- name: どらやきのご機嫌取り
+  description: 自己紹介ゲーム
+  url: null
+  image: /works/game.png
+
 - name: ハッシュタグ工房
   description: SNSに投稿する画像からハッシュタグを生成 (第1回zennハッカソン提出作品)
   url: https://zenn.dev/michan74/articles/b442ee4115c7e5
