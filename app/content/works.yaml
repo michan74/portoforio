@@ -10,7 +10,7 @@
 
 - name: どらやきのご機嫌取り
   description: 自己紹介ゲーム
-  url: null
+  url: https://dorayaki-game.vercel.app/
   image: /works/game.png
 
 - name: ハッシュタグ工房
