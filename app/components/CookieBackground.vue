@@ -99,10 +99,10 @@ onMounted(async () => {
   Composite.add(engine.world, [floor])
 
   // クッキーを順番に降らせる
-  // 恐竜クッキーの形に近い矩形で衝突判定（横広め・縦高め）
-  const W_BODY = 56
-  const H_BODY = 52
-  const SCALE = W_BODY / 256
+  // 表示サイズより小さいcircleで衝突判定（前実装と同比率: size/2.5）
+  const DISPLAY_SIZE = 96        // スプライト表示サイズ（px）
+  const RADIUS = DISPLAY_SIZE / 2.5  // 物理ボディ半径 = 38.4px
+  const SCALE = DISPLAY_SIZE / 256
   const FALLBACK_COLORS = ['#C8956C', '#D4A574', '#B8855C', '#E0B48A', '#C07050']
 
   const runner = Runner.create()
@@ -114,10 +114,10 @@ onMounted(async () => {
       const x = Math.random() * (W - 80) + 40
       const imageUrl = COOKIE_IMAGES[Math.floor(Math.random() * COOKIE_IMAGES.length)]
 
-      const body = Bodies.rectangle(x, -H_BODY - 10, W_BODY, H_BODY, {
-        restitution: 0.1,
-        friction: 0.6,
-        frictionAir: 0.01,
+      const body = Bodies.circle(x, -RADIUS - 10, RADIUS, {
+        restitution: 0.2,
+        friction: 0.5,
+        frictionAir: 0.008,
         angle: Math.random() * Math.PI * 2,
         render: loadedImages.has(imageUrl)
           ? {
