@@ -98,31 +98,33 @@ onMounted(async () => {
   })
   Composite.add(engine.world, [floor])
 
+  // クッキーを順番に降らせる
+  // 恐竜クッキーの形に近い矩形で衝突判定（横広め・縦高め）
+  const W_BODY = 56
+  const H_BODY = 52
+  const SCALE = W_BODY / 256
+  const FALLBACK_COLORS = ['#C8956C', '#D4A574', '#B8855C', '#E0B48A', '#C07050']
+
   const runner = Runner.create()
   Runner.run(runner, engine)
   Render.run(render)
-
-  // クッキーを順番に降らせる
-  const RADIUS = 26
-  const FALLBACK_COLORS = ['#C8956C', '#D4A574', '#B8855C', '#E0B48A', '#C07050']
 
   for (let i = 0; i < cookieCount; i++) {
     setTimeout(() => {
       const x = Math.random() * (W - 80) + 40
       const imageUrl = COOKIE_IMAGES[Math.floor(Math.random() * COOKIE_IMAGES.length)]
-      const scale = (RADIUS * 2) / 256
 
-      const body = Bodies.circle(x, -RADIUS - 10, RADIUS, {
-        restitution: 0.2,
-        friction: 0.5,
-        frictionAir: 0.008,
+      const body = Bodies.rectangle(x, -H_BODY - 10, W_BODY, H_BODY, {
+        restitution: 0.1,
+        friction: 0.6,
+        frictionAir: 0.01,
         angle: Math.random() * Math.PI * 2,
         render: loadedImages.has(imageUrl)
           ? {
               sprite: {
-                texture: imageUrl,
-                xScale: scale,
-                yScale: scale,
+                texture: imageUrl!,
+                xScale: SCALE,
+                yScale: SCALE,
               },
             }
           : {
