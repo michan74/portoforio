@@ -3,144 +3,113 @@ const COOKIE_IMAGES = ['/cookies/cookies_10.png']
 const MAX_COOKIES = 50
 const VISITOR_COUNT_ID = 'visitor-count'
 
-const canvasRef = ref<HTMLCanvasElement | null>(null)
+const containerRef = ref<HTMLDivElement | null>(null)
 let cleanupFn: (() => void) | null = null
 
-// ロード成功した URL を管理
-const loadedImages = new Set<string>()
-
-// 画像を事前ロード
-const preloadImage = (url: string): Promise<void> =>
-  new Promise((resolve) => {
-    const img = new Image()
-    img.onload = () => {
-      loadedImages.add(url)
-      resolve()
-    }
-    img.onerror = () => resolve()
-    img.src = url
-  })
-
 onMounted(async () => {
-  if (!canvasRef.value) return
+  if (!containerRef.value) return
 
-  // Amplify Clientで訪問を記録 & カウント取得
   const client = useAmplifyClient()
 
-  // --- 1日1回制限（localStorage による重複排除）---
   const STORAGE_KEY = 'visitor_counted_date'
-  const todayStr = new Date().toISOString().slice(0, 10) // UTC "YYYY-MM-DD"
+  const todayStr = new Date().toISOString().slice(0, 10)
 
   let alreadyCounted = false
   try {
     alreadyCounted = localStorage.getItem(STORAGE_KEY) === todayStr
-  } catch {
-    // localStorage がブロックされている場合は未カウント扱いにして従来通り動作
-  }
+  } catch {}
 
-  // カウントは常に取得（クッキーアニメーション用）
   const { data: existing } = await client.models.VisitorCount.get({ id: VISITOR_COUNT_ID })
   const currentCount = existing?.count ?? 0
 
   let visitCount: number
 
   if (alreadyCounted) {
-    // 本日分はカウント済み → 読み取りのみ
     visitCount = currentCount
   } else {
-    // 初回訪問 → インクリメントして localStorage に記録
     const newCount = currentCount + 1
-
     if (currentCount === 0) {
       await client.models.VisitorCount.create({ id: VISITOR_COUNT_ID, count: newCount })
     } else {
       await client.models.VisitorCount.update({ id: VISITOR_COUNT_ID, count: newCount })
     }
-
     try {
       localStorage.setItem(STORAGE_KEY, todayStr)
-    } catch {
-      // 書き込み失敗してもサーバー側はカウント済みなのでベストエフォート
-    }
-
+    } catch {}
     visitCount = newCount
   }
 
-  // 降らせるクッキー数
   const cookieCount = Math.min(visitCount, MAX_COOKIES)
 
-  // 画像を事前ロード
-  await Promise.all(COOKIE_IMAGES.map(preloadImage))
-
   const Matter = await import('matter-js')
-  const { Engine, Render, Runner, Bodies, Composite } = Matter
+  const { Engine, Runner, Bodies, Composite } = Matter
 
   const W = window.innerWidth
   const H = window.innerHeight
 
   const engine = Engine.create({ gravity: { y: 1.2 } })
 
-  const render = Render.create({
-    canvas: canvasRef.value,
-    engine,
-    options: {
-      width: W,
-      height: H,
-      background: 'transparent',
-      wireframes: false,
-    },
-  })
-
-  // 画面下に見えないフロア
-  const floor = Bodies.rectangle(W / 2, H + 30, W * 2, 60, {
-    isStatic: true,
-    render: { fillStyle: 'rgba(0,0,0,0)', strokeStyle: 'rgba(0,0,0,0)', lineWidth: 0 },
-  })
+  const floor = Bodies.rectangle(W / 2, H + 30, W * 2, 60, { isStatic: true })
   Composite.add(engine.world, [floor])
-
-  // クッキーを順番に降らせる
-  // 表示サイズより小さいcircleで衝突判定（前実装と同比率: size/2.5）
-  const DISPLAY_SIZE = 96        // スプライト表示サイズ（px）
-  const RADIUS = DISPLAY_SIZE / 2.5  // 物理ボディ半径 = 38.4px
-  const SCALE = DISPLAY_SIZE / 256
-  const FALLBACK_COLORS = ['#C8956C', '#D4A574', '#B8855C', '#E0B48A', '#C07050']
 
   const runner = Runner.create()
   Runner.run(runner, engine)
-  Render.run(render)
 
+  // 表示サイズと物理ボディの比率（前実装と同じ size/2.5）
+  const DISPLAY_SIZE = 120
+  const RADIUS = DISPLAY_SIZE / 2.5
+
+  type CookieEntry = { body: (typeof Bodies extends (...args: any[]) => infer R ? R : never); img: HTMLImageElement }
+  const cookies: CookieEntry[] = []
+
+  // アニメーションループ：物理位置をDOMに反映
+  let rafId: number
+  const animate = () => {
+    cookies.forEach(({ body, img }) => {
+      const { x, y } = body.position
+      const angle = body.angle
+      img.style.left = `${x - DISPLAY_SIZE / 2}px`
+      img.style.top = `${y - DISPLAY_SIZE / 2}px`
+      img.style.transform = `rotate(${angle}rad)`
+    })
+    rafId = requestAnimationFrame(animate)
+  }
+  animate()
+
+  // クッキーを順番に落とす
   for (let i = 0; i < cookieCount; i++) {
     setTimeout(() => {
-      const x = Math.random() * (W - 80) + 40
-      const imageUrl = COOKIE_IMAGES[Math.floor(Math.random() * COOKIE_IMAGES.length)]
+      if (!containerRef.value) return
+      const x = Math.random() * (W - DISPLAY_SIZE) + DISPLAY_SIZE / 2
 
       const body = Bodies.circle(x, -RADIUS - 10, RADIUS, {
-        restitution: 0.2,
+        restitution: 0.3,
         friction: 0.5,
-        frictionAir: 0.008,
+        frictionAir: 0.02,
         angle: Math.random() * Math.PI * 2,
-        render: loadedImages.has(imageUrl)
-          ? {
-              sprite: {
-                texture: imageUrl!,
-                xScale: SCALE,
-                yScale: SCALE,
-              },
-            }
-          : {
-              fillStyle: FALLBACK_COLORS[i % FALLBACK_COLORS.length],
-              strokeStyle: '#7A4A2A',
-              lineWidth: 1.5,
-            },
       })
       Composite.add(engine.world, body)
+
+      const img = document.createElement('img')
+      img.src = COOKIE_IMAGES[Math.floor(Math.random() * COOKIE_IMAGES.length)]
+      img.style.cssText = `
+        position: absolute;
+        width: ${DISPLAY_SIZE}px;
+        height: ${DISPLAY_SIZE}px;
+        pointer-events: none;
+        object-fit: contain;
+      `
+      containerRef.value.appendChild(img)
+      cookies.push({ body, img })
     }, i * 300)
   }
 
   cleanupFn = () => {
-    Render.stop(render)
+    cancelAnimationFrame(rafId)
     Runner.stop(runner)
     Engine.clear(engine)
+    cookies.forEach(({ img }) => img.remove())
+    cookies.length = 0
   }
 })
 
@@ -150,9 +119,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="cookie-background">
-    <canvas ref="canvasRef" class="physics-canvas" />
-  </div>
+  <div ref="containerRef" class="cookie-background" />
 </template>
 
 <style scoped>
@@ -162,11 +129,5 @@ onUnmounted(() => {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-}
-
-.physics-canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
 }
 </style>
